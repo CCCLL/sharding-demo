@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.sharding.dao.OpenApiLogMapper">
+  <resultMap id="BaseResultMap" type="org.example.sharding.dao.OpenApiLog">
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="api" jdbcType="VARCHAR" property="api" />
+    <result column="param" jdbcType="VARCHAR" property="param" />
+    <result column="occurred_at" jdbcType="TIMESTAMP" property="occurredAt" />
+    <result column="create_at" jdbcType="TIMESTAMP" property="createAt" />
+    <result column="last_modified_at" jdbcType="TIMESTAMP" property="lastModifiedAt" />
+  </resultMap>
+
+  <sql id="filterSql">
+    <if test="filter!=null">
+      <where>
+        <if test="filter.from!=null and filter.to!=null">
+          and occurred_at &gt;= #{filter.from} and occurred_at &lt;= #{filter.to}
+        </if>
+        <if test="filter.api!=null">
+          and api=#{filter.api}
+        </if>
+      </where>
+    </if>
+  </sql>
+
+  <select id="query" resultMap="BaseResultMap">
+    select
+    id, api, param, occurred_at,create_at, last_modified_at
+    from openapi_log_test
+    <include refid="filterSql"/>
+    order by occurred_at desc
+  </select>
+
+
+  <insert id="bulkInsert" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+    insert into openapi_log_test (api, param, occurred_at)
+    values
+    <foreach collection="list" item="item" index="index" open="" separator="," close="">
+      (#{item.api,jdbcType=VARCHAR}, #{item.param,jdbcType=VARCHAR}, #{item.occurredAt,jdbcType=TIMESTAMP})
+    </foreach>
+  </insert>
+
+  <insert id="bulkInsertRedundancy" parameterType="java.util.List" useGeneratedKeys="true" keyProperty="id">
+    insert into openapi_log_test (api, param, occurred_at)
+    values
+    <foreach collection="list" item="item" index="index" open="" separator="," close="">
+      (#{item.api,jdbcType=VARCHAR}, #{item.param,jdbcType=VARCHAR}, #{item.occurredAt,jdbcType=TIMESTAMP})
+    </foreach>
+  </insert>
+</mapper>
